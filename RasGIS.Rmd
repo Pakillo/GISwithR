@@ -1,7 +1,6 @@
 ---
 title: "GIS with R: slides for the unconverted"
 author: "F. Rodriguez-Sanchez (@frod_san)"
-date: "November 2016"
 output: 
   ioslides_presentation: 
     fig_height: 3
@@ -107,6 +106,16 @@ http://science.sciencemag.org/content/suppl/2016/09/28/353.6307.1532.DC1
 
 
 
+##  Made in R
+
+```{r echo=FALSE, out.width = "640px", out.height = "400px"}
+include_graphics("images/cartography.png")
+```
+
+https://cran.r-project.org/package=cartography
+
+
+
 # And it's very easy!
 
 ## Map occurrences in 2 lines of code
@@ -199,16 +208,24 @@ ggmap(map) +
 
 ## Download elevation data
 
-```{r}
+```{r out.width = "640px", out.height = "400px"}
 elevation <- getData("alt", country = "ESP")
 plot(elevation)
 ```
 
 
-```{r echo=FALSE, eval=FALSE, out.width = "640px", out.height = "480px"}
+## Using rasterVis
+
+```{r echo=TRUE, eval=FALSE, out.width = "640px", out.height = "480px"}
 library(rasterVis)
 levelplot(elevation)
 ```
+
+```{r echo=FALSE, out.width = "600px", out.height = "400px"}
+include_graphics("images/rastervis.png")
+```
+
+
 
 
 ## Dynamic interactive maps (leaflet)
@@ -223,6 +240,10 @@ mapView(occs)
 ## Remote sensing too
 
 ![](images/rstoolbox.png)
+
+http://bleutner.github.io/RStoolbox/
+
+And many more packages! (MODIS, Landsat, LiDAR...)
 
 
 ## Why doing GIS in R
@@ -267,7 +288,22 @@ include_graphics("images/R_ArcGis.png")
 
 - http://www.nickeubank.com/gis-in-r/
 
+- http://www.rspatial.org/
+
+- http://book.ecosens.org/
+
+- [Spatial R cheatsheet](https://github.com/wegmann/RSdocs/blob/master/RSecology_cheatsheet/RS_ecology_refcard.pdf)
+
 - etc
+
+
+
+-----
+
+
+![](images/CC-BY-NC-SA_logo.png)
+
+Slides and source code available at https://github.com/Pakillo/GISwithR
 
 
 
