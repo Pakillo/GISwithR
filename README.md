@@ -1,3 +1,8 @@
-# GIS with R: slides for the unconverted
+# GIS with R: an introduction
 
-See slides at https://pakillo.github.io/GISwithR/
+Slides: 
+
+[GIS with R: slides for the unconverted](https://pakillo.github.io/GISwithR/)
+
+[Common GIS operations with R](https://pakillo.github.io/GISwithR/GISwithR_workshop.html)
+
