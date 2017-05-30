@@ -1,0 +1,282 @@
+---
+title: "Common GIS operations in R"
+author: "F. Rodriguez-Sanchez (@frod_san)"
+output: 
+  ioslides_presentation: 
+    fig_height: 3
+    fig_width: 4
+    smaller: yes
+---
+
+```{r knitr_setup, include=FALSE, cache=FALSE}
+
+library(knitr)
+
+### Chunk options ###
+
+## Text results
+opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, eval = TRUE, size = 'footnotesize')
+
+## Code decoration
+opts_chunk$set(tidy = FALSE, comment = NA, highlight = TRUE, prompt = FALSE, crop = FALSE)
+
+# ## Cache
+opts_chunk$set(cache = TRUE, cache.path = "knitr_output/cache/")
+
+# ## Plots
+opts_chunk$set(fig.path = "knitr_output/figures/")
+opts_chunk$set(fig.align = 'center')
+
+### Hooks ###
+## Crop plot margins
+knit_hooks$set(crop = hook_pdfcrop)
+
+## Reduce font size
+# see http://stackoverflow.com/a/39961605
+knit_hooks$set(smallfont = function(before, options, envir) {
+  if (before) return(paste0("\n \\", options$size, "\n\n"))
+  else return("\n\n \\normalsize \n")
+  })
+
+```
+
+## Basic packages for spatial data
+
+- sp
+- sfr
+- rgeos
+- raster
+- rgdal
+
+And many more: see
+
+- [Spatial CRAN Task View](https://cran.r-project.org/web/views/Spatial.html)
+
+- [Mapping Task View](https://github.com/ropensci/maptools)
+
+
+## Spatial data types in R
+
+- **Vectorial**:
+    - SpatialPoints, SpatialPointsDataFrame
+    - SpatialLines, SpatialLinesDataFrame
+    - SpatialPolygons, SpatialPolygonsDataFrame
+  
+- **Raster**:
+    - RasterLayer: 1 grid
+    - RasterStack: multiple layers with same extent, resolution & projection
+    - RasterBrick: multiple layers stored in one single file
+
+
+
+# Vector data
+
+## Creating vector data
+
+- From file
+- Making dataframe spatial
+- Hand digitizing
+
+
+## Importing vector data
+
+```{r}
+library(raster)
+mydata <- shapefile("data/occs.shp")
+```
+
+Alternatively:
+
+- `rgdal::readOGR`
+
+- `sfr::read_sf`
+
+
+## Making a data frame *spatial*
+
+```{r}
+mydf <- read.csv("data/occs.csv")
+library(sp)
+coordinates(mydf) <- c("x", "y") # names of cols giving x,y coords (in that order)
+```
+
+Accessing the data: `mydf@data`
+
+Accessing coordinates: `coordinates(mydf)`
+
+
+
+## Digitizing
+
+Using `raster` functions:
+
+  - Points: `click`
+  - Lines: `drawLine`
+  - Polygons: `drawPoly`
+  
+  
+## Setting the projection (Coordinate Reference System)
+
+```{r}
+crs(mydf) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+```
+
+See http://spatialreference.org 
+  
+
+
+## Changing projection
+
+```{r}
+etrs.laea <- CRS("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs")
+mydf.proj <- spTransform(mydf, etrs.laea)
+```
+
+
+
+
+## Basic plotting
+
+```{r message = FALSE}
+library(mapr)
+names(mydf) <- "name"  #required for mapr
+map_ggmap(mydf, lon = "x", lat = "y")
+```
+
+
+## Leaflet map (interactive)
+
+```{r}
+map_leaflet(mydf, lon = "x", lat = "y")
+```
+
+
+
+## Saving vector data
+
+- `save` or `saveRDS` for native R format
+
+- `raster::shapefile`
+
+- `writeOGR` or `sfr::write_sf`
+
+
+
+
+
+# Raster data
+
+
+## Download raster (and vector) data
+
+```{r}
+bioclim <- getData('worldclim', var = "bio", res = 10)
+bioclim
+```
+
+
+
+## Importing raster data from disk
+
+One grid only (1 layer):
+
+```{r}
+ras <- raster("wc10/bio1.bil")
+ras
+```
+
+
+## Importing raster data from disk
+
+Multiple grids:
+
+```{r}
+files <- list.files("wc10", pattern = "bio\\d+.bil", full.names = TRUE)
+manylayers <- stack(files)
+manylayers
+```
+
+
+## Setting the projection (Coordinate Reference System)
+
+```{r}
+crs(ras) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+```
+
+See http://spatialreference.org 
+  
+To change projection: `projectRaster`
+
+
+
+## Plotting
+
+```{r}
+plot(ras)
+```
+
+Also rasterVis and ggplot2 for more advanced plotting
+
+
+## Crop (change extent)
+
+```{r}
+ras.crop <- crop(ras, mydf)
+plot(ras.crop)
+```
+
+
+
+## Change resolution
+
+```{r}
+ras.coarse <- aggregate(ras.crop, fact = 4, fun = mean)
+ras.coarse
+```
+
+
+
+## Extract values from rasters
+
+```{r}
+vals <- extract(ras, mydf)
+vals <- extract(manylayers, mydf)
+```
+
+
+## Rasterize vector data
+
+```{r}
+vals <- extract(ras, mydf, sp = TRUE)
+vec2ras <- rasterize(vals, ras, field = "bio1")
+plot(vec2ras)
+```
+
+
+
+## Save raster data
+
+
+```{r eval=FALSE}
+writeRaster(ras, filename = "myraster.grd")
+```
+
+KML (Google Earth):
+
+```{r eval=FALSE}
+KML(ras, filename = "myraster.kmz")
+```
+
+
+
+
+
+-----
+
+
+![](images/CC-BY-NC-SA_logo.png)
+
+Slides and source code available at https://github.com/Pakillo/GISwithR
+
+
+
