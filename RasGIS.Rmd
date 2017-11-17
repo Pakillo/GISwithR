@@ -116,7 +116,7 @@ https://cran.r-project.org/package=cartography
 
 
 
-# And it's very easy!
+# And it's easy!
 
 ## Map occurrences in 2 lines of code
 
@@ -278,6 +278,18 @@ include_graphics("images/R_ArcGis.png")
 
 ## Some tutorials
 
+- https://bhaskarvk.github.io/user2017.geodataviz/
+
+- https://github.com/Nowosad/gis_with_r_how_to_start
+
+- http://www.rspatial.org/
+
+- http://r-spatial.github.io/sf/
+
+- http://book.ecosens.org/
+
+- http://robinlovelace.net/geocompr/
+
 - http://pakillo.github.io/R-GIS-tutorial
 
 - http://neondataskills.org/tutorial-series/
@@ -287,10 +299,6 @@ include_graphics("images/R_ArcGis.png")
 - https://github.com/USEPA/intro_gis_with_r
 
 - http://www.nickeubank.com/gis-in-r/
-
-- http://www.rspatial.org/
-
-- http://book.ecosens.org/
 
 - [Spatial R cheatsheet](https://github.com/wegmann/RSdocs/blob/master/RSecology_cheatsheet/RS_ecology_refcard.pdf)
 

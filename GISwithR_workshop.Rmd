@@ -43,9 +43,9 @@ knit_hooks$set(smallfont = function(before, options, envir) {
 ## Basic packages for spatial data
 
 - sp
-- sfr
-- rgeos
+- sf
 - raster
+- rgeos
 - rgdal
 
 And many more: see
@@ -57,68 +57,122 @@ And many more: see
 
 ## Spatial data types in R
 
-- **Vectorial**:
-    - SpatialPoints, SpatialPointsDataFrame
-    - SpatialLines, SpatialLinesDataFrame
-    - SpatialPolygons, SpatialPolygonsDataFrame
+- **Vectorial** (sp/sf):
+    - Points (SpatialPoints, SpatialPointsDataFrame...)
+    - Lines (SpatialLines, SpatialLinesDataFrame...)
+    - Polygons (SpatialPolygons, SpatialPolygonsDataFrame...)
   
 - **Raster**:
     - RasterLayer: 1 grid
     - RasterStack: multiple layers with same extent, resolution & projection
-    - RasterBrick: multiple layers stored in one single file
+    - RasterBrick: multiple layers (= RasterStack) but stored in one single file
 
 
 
 # Vector data
 
-## Creating vector data
 
-- From file
-- Making dataframe spatial
-- Hand digitizing
+```{r echo = FALSE, message = FALSE}
+## Download dataset to be used later
+library(rnaturalearth)
+library(dplyr)
+library(sf)
+countries <- rnaturalearth::ne_countries(continent = "Europe", returnclass = "sf")
+countries <- dplyr::select(countries, name, pop_est, gdp_md_est, subregion, geometry) %>%
+  filter(name != "Russia")
+sf::st_write(countries, "data/eucountries.shp", delete_dsn = TRUE)
+```
 
 
 ## Importing vector data
 
 ```{r}
-library(raster)
-mydata <- shapefile("data/occs.shp")
+library(sf)
+countries <- st_read("data/eucountries.shp")  # or gpkg, etc
 ```
 
-Alternatively:
 
-- `rgdal::readOGR`
+## `sf` objects are data.frames! (w/ geometry column)
 
-- `sfr::read_sf`
+```{r}
+head(countries)
+```
 
+
+## So we can easily manipulate them (e.g. dplyr)
+
+```{r}
+library(dplyr)
+countries <- dplyr::select(countries, -gdp_md_est)
+```
+
+
+## So we can easily manipulate them (e.g. dplyr)
+
+```{r}
+west.eu <- filter(countries, subregion == "Western Europe")
+west.eu
+```
+
+
+## So we can easily manipulate them (e.g. dplyr)
+
+```{r}
+countries %>%
+  group_by(subregion) %>%
+  summarise(mean(pop_est))
+```
+
+
+## So we can easily manipulate them (e.g. dplyr)
+
+```{r}
+countries <- mutate(countries, pop.million = pop_est/1000000)
+```
+
+
+## Basic plotting
+
+```{r}
+plot(countries)
+```
+
+## Basic plotting
+
+```{r}
+plot(countries["subregion"])
+```
+
+
+## Interactive plot (leaflet)
+
+```{r}
+library(mapview)
+mapView(countries)
+```
+
+
+# How to create sf from an R object?
 
 ## Making a data frame *spatial*
 
 ```{r}
 mydf <- read.csv("data/occs.csv")
-library(sp)
-coordinates(mydf) <- c("x", "y") # names of cols giving x,y coords (in that order)
+head(mydf)
 ```
 
-Accessing the data: `mydf@data`
+## Making a data frame *spatial*
 
-Accessing coordinates: `coordinates(mydf)`
+```{r}
+occs <- st_as_sf(mydf, coords = c("x", "y"))
+head(occs)
+```
 
 
-
-## Digitizing
-
-Using `raster` functions:
-
-  - Points: `click`
-  - Lines: `drawLine`
-  - Polygons: `drawPoly`
-  
-  
 ## Setting the projection (Coordinate Reference System)
 
 ```{r}
-crs(mydf) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+st_crs(occs) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ```
 
 See http://spatialreference.org 
@@ -128,37 +182,89 @@ See http://spatialreference.org
 ## Changing projection
 
 ```{r}
-etrs.laea <- CRS("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs")
-mydf.proj <- spTransform(mydf, etrs.laea)
+occs.laea <- st_transform(occs, crs = 3035)
+occs.laea
 ```
 
 
-
-
-## Basic plotting
-
-```{r message = FALSE}
-library(mapr)
-names(mydf) <- "name"  #required for mapr
-map_ggmap(mydf, lon = "x", lat = "y")
-```
-
-
-## Leaflet map (interactive)
+## Mapping points 
 
 ```{r}
-map_leaflet(mydf, lon = "x", lat = "y")
+mapView(occs)
+```
+
+
+
+## Convert sf to Spatial* object
+
+```{r}
+occs.sp <- as(occs, "Spatial")
+occs.sp
+```
+
+
+## Plotting Spatial* objects with ggspatial
+
+```{r}
+library(ggplot2)
+library(ggspatial)
+ggplot() + coord_map() +
+  geom_spatial(occs.sp) 
+```
+
+
+## Plotting Spatial* objects with ggspatial
+
+```{r}
+ggplot() + coord_map() +
+  geom_osm() +
+  geom_spatial(occs.sp)
+```
+
+
+## Plotting Spatial* objects with ggspatial
+
+```{r}
+ggplot() + coord_map() +
+  geom_osm(type = "stamenwatercolor") +
+  geom_spatial(occs.sp)
+```
+
+
+## Plotting Spatial* objects with ggspatial
+
+```{r}
+countries.sp <- as(countries, "Spatial")
+ggplot() + theme_bw() +
+  geom_spatial(countries.sp, aes(fill = subregion))
+
 ```
 
 
 
 ## Saving vector data
 
+```{r}
+st_write(countries, "data/countries.gpkg", delete_dsn = TRUE)
+```
+
 - `save` or `saveRDS` for native R format
 
-- `raster::shapefile`
 
-- `writeOGR` or `sfr::write_sf`
+
+
+
+
+# Geocoding
+
+## Geocoding
+
+```{r}
+library(ggmap)
+here <- geocode("Escuela Informatica, Granada", source = "google")
+here
+```
+
 
 
 
@@ -170,6 +276,7 @@ map_leaflet(mydf, lon = "x", lat = "y")
 ## Download raster (and vector) data
 
 ```{r}
+library(raster)
 bioclim <- getData('worldclim', var = "bio", res = 10)
 bioclim
 ```
@@ -209,19 +316,25 @@ To change projection: `projectRaster`
 
 
 
-## Plotting
+## Basic raster plotting
 
 ```{r}
 plot(ras)
 ```
 
-Also rasterVis and ggplot2 for more advanced plotting
+
+## rasterVis
+
+```{r}
+library(rasterVis)
+levelplot(ras, margin = FALSE)
+```
 
 
 ## Crop (change extent)
 
 ```{r}
-ras.crop <- crop(ras, mydf)
+ras.crop <- crop(ras, occs.sp)
 plot(ras.crop)
 ```
 
@@ -239,19 +352,9 @@ ras.coarse
 ## Extract values from rasters
 
 ```{r}
-vals <- extract(ras, mydf)
-vals <- extract(manylayers, mydf)
+vals <- extract(ras, occs.sp)
+vals <- extract(manylayers, occs.sp)
 ```
-
-
-## Rasterize vector data
-
-```{r}
-vals <- extract(ras, mydf, sp = TRUE)
-vec2ras <- rasterize(vals, ras, field = "bio1")
-plot(vec2ras)
-```
-
 
 
 ## Save raster data
@@ -264,11 +367,78 @@ writeRaster(ras, filename = "myraster.grd")
 KML (Google Earth):
 
 ```{r eval=FALSE}
-KML(ras, filename = "myraster.kmz")
+KML(ras, filename = "myraster.kmz", overwrite = TRUE)
 ```
 
 
+# Exercises
 
+## Geocode and map address
+
+Static map
+
+```{r echo = FALSE}
+library(ggmap)
+library(sp)
+here <- geocode("Teide", source = "google")
+coordinates(here) <- c("lon", "lat")
+crs(here) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+library(ggspatial)
+ggplot() + 
+  geom_osm() + 
+  geom_spatial(here)
+```
+
+
+## Geocode and map address
+
+Interactive map
+
+```{r echo = FALSE}
+library(mapview)
+loc <- st_as_sf(here)
+mapView(loc)
+```
+
+
+## January Precipitation in Spain (raster)
+
+```{r echo=FALSE}
+library(raster)
+prec <- getData("worldclim", var = "prec", res = 10)
+prec.sp <- crop(prec, c(-10, 5, 35, 45))
+plot(prec.sp, 1)
+```
+
+
+## January Precipitation in Spain (leaflet)
+
+```{r echo=FALSE}
+library(mapview)
+mapView(prec.sp[[1]])
+```
+
+
+## Monthly Precipitation in Spain (rasterVis)
+
+```{r echo=FALSE}
+library(rasterVis)
+levelplot(prec.sp)
+```
+
+
+## Elevation map of Spain
+
+```{r echo=FALSE}
+# Get elevation data from the internet 
+elev <- getData("alt", country = "Spain")
+
+# Crop raster to desired extent
+ele <- crop(elev, c(-10, 5, 35, 45))
+
+plot(ele, col = topo.colors(16), alpha = 0.5, interpolate = TRUE)
+contour(ele, levels = seq(0, 4000, 1000), add = TRUE)
+```
 
 
 -----
