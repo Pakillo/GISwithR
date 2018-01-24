@@ -180,12 +180,12 @@ points(Mercator(occs), col = "red", pch = 20, cex = 2)
 ## Alternatively, load shapefile
 
 ```{r echo = FALSE}
-shapefile(occs, filename = "occs.shp", overwrite = TRUE)
+shapefile(occs, filename = "data/occs.shp", overwrite = TRUE)
 ```
 
 
 ```{r fig.keep = "last"}
-occs <- shapefile("occs.shp")
+occs <- shapefile("data/occs.shp")
 plot(gmap(occs, type = "satellite"))
 points(Mercator(occs), col = "red", pch = 20, cex = 2)
 ```

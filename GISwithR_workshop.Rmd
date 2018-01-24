@@ -72,7 +72,9 @@ And many more: see
 # Vector data
 
 
-```{r echo = FALSE, message = FALSE}
+## Importing vector data
+
+```{r include = FALSE}
 ## Download dataset to be used later
 library(rnaturalearth)
 library(dplyr)
@@ -84,7 +86,6 @@ sf::st_write(countries, "data/eucountries.shp", delete_dsn = TRUE)
 ```
 
 
-## Importing vector data
 
 ```{r}
 library(sf)
@@ -139,14 +140,14 @@ plot(countries)
 
 ## Basic plotting
 
-```{r}
+```{r fig.width=5}
 plot(countries["subregion"])
 ```
 
 
 ## Interactive plot (leaflet)
 
-```{r}
+```{r fig.height=4, fig.width=5}
 library(mapview)
 mapView(countries)
 ```
@@ -233,7 +234,7 @@ ggplot() + coord_map() +
 
 ## Plotting Spatial* objects with ggspatial
 
-```{r}
+```{r fig.height=4, fig.width=4}
 countries.sp <- as(countries, "Spatial")
 ggplot() + theme_bw() +
   geom_spatial(countries.sp, aes(fill = subregion))
@@ -248,7 +249,7 @@ ggplot() + theme_bw() +
 st_write(countries, "data/countries.gpkg", delete_dsn = TRUE)
 ```
 
-- `save` or `saveRDS` for native R format
+- Can also use `save` or `saveRDS` for native R format
 
 
 
@@ -260,10 +261,16 @@ st_write(countries, "data/countries.gpkg", delete_dsn = TRUE)
 ## Geocoding
 
 ```{r}
-library(ggmap)
-here <- geocode("Escuela Informatica, Granada", source = "google")
+here <- ggmap::geocode("Escuela Informatica, Granada", source = "google")
 here
 ```
+
+
+```{r}
+here <- dismo::geocode("Escuela Informatica, Granada")
+here
+```
+
 
 
 
@@ -318,14 +325,14 @@ To change projection: `projectRaster`
 
 ## Basic raster plotting
 
-```{r}
+```{r fig.height=4, fig.width=5}
 plot(ras)
 ```
 
 
 ## rasterVis
 
-```{r}
+```{r fig.height=4, fig.width=5}
 library(rasterVis)
 levelplot(ras, margin = FALSE)
 ```
@@ -333,7 +340,7 @@ levelplot(ras, margin = FALSE)
 
 ## Crop (change extent)
 
-```{r}
+```{r fig.height=4, fig.width=5}
 ras.crop <- crop(ras, occs.sp)
 plot(ras.crop)
 ```
@@ -377,14 +384,14 @@ KML(ras, filename = "myraster.kmz", overwrite = TRUE)
 
 Static map
 
-```{r echo = FALSE}
+```{r echo = FALSE, fig.height=4, fig.width=5}
 library(ggmap)
 library(sp)
-here <- geocode("Teide", source = "google")
+here <- ggmap::geocode("Teide", source = "google")
 coordinates(here) <- c("lon", "lat")
 crs(here) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 library(ggspatial)
-ggplot() + 
+ggplot() + coord_map() +
   geom_osm() + 
   geom_spatial(here)
 ```
@@ -397,13 +404,15 @@ Interactive map
 ```{r echo = FALSE}
 library(mapview)
 loc <- st_as_sf(here)
-mapView(loc)
+#mapView(loc)
+# to display suitable zoom:
+mapView(loc)@map %>% setView(lng = -16.64, lat = 28.27, zoom = 9)
 ```
 
 
 ## January Precipitation in Spain (raster)
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.height=4, fig.width=5}
 library(raster)
 prec <- getData("worldclim", var = "prec", res = 10)
 prec.sp <- crop(prec, c(-10, 5, 35, 45))
@@ -413,7 +422,7 @@ plot(prec.sp, 1)
 
 ## January Precipitation in Spain (leaflet)
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.height=4, fig.width=5}
 library(mapview)
 mapView(prec.sp[[1]])
 ```
@@ -421,7 +430,7 @@ mapView(prec.sp[[1]])
 
 ## Monthly Precipitation in Spain (rasterVis)
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.height=4, fig.width=5}
 library(rasterVis)
 levelplot(prec.sp)
 ```
@@ -429,7 +438,7 @@ levelplot(prec.sp)
 
 ## Elevation map of Spain
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.height=4, fig.width=5}
 # Get elevation data from the internet 
 elev <- getData("alt", country = "Spain")
 
