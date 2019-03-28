@@ -493,14 +493,13 @@ class: inverse, middle, center
 
 ## Geocoding
 
-```{r GISwithR-38, eval=FALSE}
-here <- ggmap::geocode("Escuela Informatica, Granada", source = "google")
-here
+```{r GISwithR-38, eval=TRUE}
+myplace <- tmaptools::geocode_OSM("Granada, Spain")
+myplace
 ```
-        lon      lat
-1 -3.624551 37.19705
 
-Other packages: dismo, opencage, geocodeHERE, rmapzen...
+
+Other packages: opencage, dismo, ggmap, geocodeHERE, rmapzen...
 
 
 
